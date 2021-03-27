@@ -1,8 +1,10 @@
 #![feature(aarch64_target_feature)]
 #![feature(stdsimd)]
+#![feature(test)]
 use std::arch;
 use std::arch::aarch64::{__crc32b, __crc32d};
 use unroll::unroll_for_loops;
+extern crate test;
 
 trait Crc32T {
 	fn crc32(d: &[u8]) -> u32;
@@ -69,7 +71,25 @@ mod tests {
 	assert!(data2cksum == 2944392619);
 	let data1cksumfast = Crc32Fast::crc32("Crc32Slow".as_bytes());
 	let data2cksumfast = Crc32Fast::crc32(&(3.14_f32).to_be_bytes());
-	assert!(data1cksumfast == data1cksumfast);
-	assert!(data2cksumfast == data2cksumfast);
+	assert!(data1cksum == data1cksumfast);
+	assert!(data2cksum == data2cksumfast);
+    }
+
+    #[bench]
+    fn crc32_bench_slow(b: &mut test::Bencher) {
+	let smp : u64 = 0xDEADBEEF as u64;
+
+        b.iter(|| 
+            Crc32Slow::crc32(&smp.to_be_bytes())
+        );
+    }
+
+    #[bench]
+    fn crc32_bench_fast(b: &mut test::Bencher) {
+	let smp : u64 = 0xDEADBEEF as u64;
+
+        b.iter(|| 
+            Crc32Fast::crc32(&smp.to_be_bytes())
+        );
     }
 }

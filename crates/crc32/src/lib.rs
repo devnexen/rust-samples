@@ -1,8 +1,12 @@
 #![feature(aarch64_target_feature)]
 #![feature(stdsimd)]
 #![feature(test)]
+#![feature(asm)]
 use std::arch;
+#[cfg(target_arch = "aarch64")]
 use std::arch::aarch64::{__crc32b, __crc32d};
+#[cfg(target_arch = "x86_64")]
+use std::arch::x86_64::{_mm_crc32_u8, _mm_crc32_u32};
 use unroll::unroll_for_loops;
 extern crate test;
 
@@ -104,9 +108,10 @@ impl Crc32T for Crc32FastPure {
     }
 }
 
+#[cfg(target_arch = "aarch64")]
 #[target_feature(enable = "crc")]
 #[unroll_for_loops]
-unsafe fn aarch64_crc32(d: &[u8]) -> u32 {
+unsafe fn native_crc32(d: &[u8]) -> u32 {
 	let mut sum = 0xFFFFFFFF;
 	let (block_a, data, block_b) = d.align_to::<u64>();
 
@@ -122,11 +127,31 @@ unsafe fn aarch64_crc32(d: &[u8]) -> u32 {
 	!sum
 }
 
+#[cfg(target_arch = "x86_64")]
+unsafe fn native_crc32(d: &[u8]) -> u32 {
+    let mut sum = 0xFFFFFFFF;
+	let (block_a, data, block_b) = d.align_to::<u64>();
+
+    for &index in block_a {
+        sum = std::arch::x86_64::_mm_crc32_u8(sum, index);
+    }
+    for &index in data {
+        sum = std::arch::x86_64::_mm_crc32_u64(sum.into(), index) as u32;
+    }
+    for &index in block_b {
+        sum = std::arch::x86_64::_mm_crc32_u8(sum, index);
+    }
+    sum = !sum;
+    sum = ((sum >> 15 | sum << 17) + 0xA282EAD8);
+    sum
+}
+
+
 impl Crc32T for Crc32Fast {
 
 	fn crc32(d: &[u8]) -> u32 {
 		let mut sum = 0;
-		unsafe { sum = aarch64_crc32(d) }
+		unsafe { sum = native_crc32(d); }
 		sum
 	}
 }
@@ -146,6 +171,8 @@ mod tests {
 	assert!(data2cksum == data2cksumfastpure);
 	let data1cksumfast = Crc32Fast::crc32("Crc32Slow".as_bytes());
 	let data2cksumfast = Crc32Fast::crc32(&(3.14_f32).to_be_bytes());
+    println!("### {} {}", data1cksum, data1cksumfast);
+    println!("### {} {}", data2cksum, data2cksumfast);
 	assert!(data1cksum == data1cksumfast);
 	assert!(data2cksum == data2cksumfast);
     }

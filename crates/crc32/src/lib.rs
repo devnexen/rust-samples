@@ -142,8 +142,7 @@ unsafe fn native_crc32(d: &[u8]) -> u32 {
         sum = std::arch::x86_64::_mm_crc32_u8(sum, index);
     }
     sum = !sum;
-    sum = ((sum >> 15 | sum << 17) + 0xA282EAD8);
-    sum
+    ((sum >> 15 | sum << 17) + 0xA282EAD8)
 }
 
 
@@ -161,20 +160,20 @@ mod tests {
     use super::*;
     #[test]
     fn crc32_impl_cmp() {
-	let data1cksum = Crc32Slow::crc32("Crc32Slow".as_bytes());
-	let data2cksum = Crc32Slow::crc32(&(3.14_f32).to_be_bytes());
-	assert!(data1cksum == 3091428579);
-	assert!(data2cksum == 2944392619);
-	let data1cksumfastpure = Crc32FastPure::crc32("Crc32Slow".as_bytes());
-	let data2cksumfastpure = Crc32FastPure::crc32(&(3.14_f32).to_be_bytes());
-	assert!(data1cksum == data1cksumfastpure);
-	assert!(data2cksum == data2cksumfastpure);
-	let data1cksumfast = Crc32Fast::crc32("Crc32Slow".as_bytes());
-	let data2cksumfast = Crc32Fast::crc32(&(3.14_f32).to_be_bytes());
-    println!("### {} {}", data1cksum, data1cksumfast);
-    println!("### {} {}", data2cksum, data2cksumfast);
-	assert!(data1cksum == data1cksumfast);
-	assert!(data2cksum == data2cksumfast);
+        let data1cksum = Crc32Slow::crc32(b"Crc32Slow");
+        let data2cksum = Crc32Slow::crc32(&(3.14_f32).to_be_bytes());
+        assert!(data1cksum == 3091428579);
+        assert!(data2cksum == 2944392619);
+        let data1cksumfastpure = Crc32FastPure::crc32(b"Crc32Slow");
+        let data2cksumfastpure = Crc32FastPure::crc32(&(3.14_f32).to_be_bytes());
+        assert!(data1cksum == data1cksumfastpure);
+        assert!(data2cksum == data2cksumfastpure);
+        let data1cksumfast = Crc32Fast::crc32(b"Crc32Slow");
+        let data2cksumfast = Crc32Fast::crc32(&(3.14_f32).to_be_bytes());
+        println!("{} {}", data1cksum, data1cksumfast);
+        println!("{} {}", data2cksum, data2cksumfast);
+        assert!(data1cksum == data1cksumfast);
+        assert!(data2cksum == data2cksumfast);
     }
 
     #[bench]

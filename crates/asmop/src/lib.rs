@@ -61,6 +61,23 @@ pub fn mul64(x: u32, y: u32) -> u64 {
     r
 }
 
+pub fn mul128(x: u64, y: u64) -> u128 {
+    let mut r: u128 = 0;
+    let mut lr: u64 = 0;
+    let mut hr: u64 = 0;
+    unsafe {
+        asm!("mul {2:x}, {0:x}, {1:x}",
+             "umulh {3:x}, {0:x}, {1:x}",
+             in(reg) x,
+             in(reg) y,
+             out(reg) lr,
+             out(reg) hr
+             );
+        r = (lr + hr) as u128;
+    }
+    r
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,6 +116,18 @@ mod tests {
         let mut b = 2u32;
         let mut c = mul64(a, b);
         assert_eq!(c, 2u32.pow(2u32) as u64);
+        let mut a = 1u64;
+        let mut b = 1u64;
+        let mut c = mul128(a, b);
+        assert_eq!(c, 1 as u128);
+        a = 10u64;
+        b = 30u64;
+        c = mul128(a, b);
+        assert_eq!(c, 300u128);
+        a = 300u64;
+        b = 25u64;
+        c = mul128(a, b);
+        assert_eq!(c, 7500u128);
     }
 
     #[bench]

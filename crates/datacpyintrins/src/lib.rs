@@ -55,7 +55,7 @@ mod tests {
             src.push(i);
         }
         let mut dest: Vec<u8> = Vec::new();
-        for i in 0..16 {
+        for _i in 0..16 {
             dest.push(0);
         }
         datacpy(&mut dest, &src, src.len());
@@ -65,7 +65,7 @@ mod tests {
             src.push(i);
         }
         dest = Vec::with_capacity(128);
-        for i in 0..128 {
+        for _i in 0..128 {
             dest.push(0);
         }
         datacpybg(&mut dest, &src, src.len());
@@ -79,11 +79,13 @@ mod tests {
             src.push(i);
         }
         let mut dest = Vec::with_capacity(128);
-        for i in 0..128 {
+        for _i in 0..128 {
             dest.push(0);
         }
         b.iter(|| 
-            datacpy(&mut dest, &src, src.len())
+            for _i in 0..100 {
+                datacpy(&mut dest, &src, src.len());
+            }
         );
     }
 
@@ -94,11 +96,13 @@ mod tests {
             src.push(i);
         }
         let mut dest = Vec::with_capacity(128);
-        for i in 0..128 {
+        for _i in 0..128 {
             dest.push(0);
         }
         b.iter(|| 
-            datacpybg(&mut dest, &src, src.len())
+            for _i in 0..100 {
+                datacpybg(&mut dest, &src, src.len());
+            }
         );
     }
 }

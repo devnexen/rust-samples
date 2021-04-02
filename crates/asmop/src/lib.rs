@@ -1,4 +1,13 @@
 #![feature(asm)]
+#![feature(test)]
+extern crate libc;
+extern crate test;
+use std::mem::size_of;
+use libc::c_void;
+
+extern "C" {
+    pub fn arc4random_buf(a: *mut c_void, b: usize) -> c_void;
+}
 
 pub fn add64(x: u32, y: u32) -> u64 {
     let mut r: u64 = 0;
@@ -66,5 +75,37 @@ mod tests {
         b = a * 2u64;
         c = add128(a, b);
         assert_eq!(c, 30u128);
+    }
+
+    #[bench]
+    fn adds64(b: &mut test::Bencher) {
+        let mut x : u32 = 0;
+        let mut y : u32 = 0;
+        let mut ptrx : *mut u32 = &mut x;
+        let mut ptry : *mut u32 = &mut y;
+        const sz : usize = size_of::<u32>();
+        unsafe {
+            arc4random_buf(ptrx as *mut c_void, sz);
+            arc4random_buf(ptry as *mut c_void, sz);
+        }
+        b.iter(|| 
+            add64(x, y)
+        );
+    }
+
+    #[bench]
+    fn adds128(b: &mut test::Bencher) {
+        let mut x : u64 = 0;
+        let mut y : u64 = 0;
+        let mut ptrx : *mut u64 = &mut x;
+        let mut ptry : *mut u64 = &mut y;
+        const sz : usize = size_of::<u64>();
+        unsafe {
+            arc4random_buf(ptrx as *mut c_void, sz);
+            arc4random_buf(ptry as *mut c_void, sz);
+        }
+        b.iter(|| 
+            add128(x, y)
+        );
     }
 }

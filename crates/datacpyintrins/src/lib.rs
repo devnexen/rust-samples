@@ -1,6 +1,6 @@
 #![feature(test)]
 #[cfg(target_arch = "x86_64")]
-use std::arch::x86_64::{_mm_loadu_si128, _mm_storeu_si128, __m128i};
+use std::arch::x86_64::{_mm_load_si128, _mm_store_si128, __m128i};
 use std::mem::size_of;
 extern crate test;
 const LEN : usize = size_of::<__m128i>();
@@ -14,8 +14,8 @@ pub fn datacpy(dest: &mut [u8], src: &[u8], sz: usize) {
         let mut s = srcptr;
         let mut d = destptr;
         while s <= boundaries.sub(LEN) {
-            let sm128 = _mm_loadu_si128(s as *const __m128i);
-            _mm_storeu_si128(d as *mut __m128i, sm128);
+            let sm128 = _mm_load_si128(s as *const __m128i);
+            _mm_store_si128(d as *mut __m128i, sm128);
             s = s.add(LEN);
             d = d.add(LEN);
         }
@@ -31,14 +31,14 @@ pub fn datacpybg(dest: &mut [u8], src: &[u8], sz: usize) {
         let mut s = srcptr;
         let mut d = destptr;
         while s <= boundaries.sub(LEN) {
-            let sm1280 = _mm_loadu_si128(s as *const __m128i);
-            let sm1281 = _mm_loadu_si128(s.add(LEN) as *const __m128i);
-            let sm1282 = _mm_loadu_si128(s.add(2 * LEN) as *const __m128i);
-            let sm1283 = _mm_loadu_si128(s.add(3 * LEN) as *const __m128i);
-            _mm_storeu_si128(d as *mut __m128i, sm1280);
-            _mm_storeu_si128(d.add(LEN) as *mut __m128i, sm1281);
-            _mm_storeu_si128(d.add(2 * LEN) as *mut __m128i, sm1282);
-            _mm_storeu_si128(d.add(3 * LEN) as *mut __m128i, sm1283);
+            let sm1280 = _mm_load_si128(s as *const __m128i);
+            let sm1281 = _mm_load_si128(s.add(LEN) as *const __m128i);
+            let sm1282 = _mm_load_si128(s.add(2 * LEN) as *const __m128i);
+            let sm1283 = _mm_load_si128(s.add(3 * LEN) as *const __m128i);
+            _mm_store_si128(d as *mut __m128i, sm1280);
+            _mm_store_si128(d.add(LEN) as *mut __m128i, sm1281);
+            _mm_store_si128(d.add(2 * LEN) as *mut __m128i, sm1282);
+            _mm_store_si128(d.add(3 * LEN) as *mut __m128i, sm1283);
             s = s.add(4 * LEN);
             d = d.add(4 * LEN);
         }

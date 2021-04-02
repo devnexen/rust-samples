@@ -2,7 +2,6 @@
 #![feature(test)]
 extern crate libc;
 extern crate test;
-use std::mem::size_of;
 use libc::c_void;
 
 extern "C" {
@@ -12,9 +11,9 @@ extern "C" {
 pub fn add64(x: u32, y: u32) -> u64 {
     let mut r: u64 = 0;
     unsafe {
-        asm!("mov x2, {0}",
-             "mov x3, {1}",
-             "add {2}, x2, x3",
+        asm!("mov x2, {0:x}",
+             "mov x3, {1:x}",
+             "add {2:x}, x2, x3",
              in(reg) x,
              in(reg) y,
              out(reg) r,
@@ -32,12 +31,12 @@ pub fn add128(x: u64, y: u64) -> u128 {
     let mut hr: u64 = 0;
     let mut lr: u64 = 0;
     unsafe {
-        asm!("mov x2, {0}",
-             "mov x3, {1}",
-             "mov x4, {2}",
-             "mov x5, {3}",
-             "adds {4}, x3, x5",
-             "adc {5}, x2, x4",
+        asm!("mov x2, {0:x}",
+             "mov x3, {1:x}",
+             "mov x4, {2:x}",
+             "mov x5, {3:x}",
+             "adds {4:x}, x3, x5",
+             "adc {5:x}, x2, x4",
              in(reg) lx,
              in(reg) hx,
              in(reg) ly,
@@ -50,9 +49,22 @@ pub fn add128(x: u64, y: u64) -> u128 {
     r
 }
 
+pub fn mul64(x: u32, y: u32) -> u64 {
+    let mut r: u64 = 0;
+    unsafe {
+        asm!("umull {2:x}, {0:w}, {1:w}",
+             in(reg) x,
+             in(reg) y,
+             out(reg) r
+             );
+    }
+    r
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::mem::size_of;
     #[test]
     fn adds() {
         let mut x = 1u32;
@@ -75,6 +87,18 @@ mod tests {
         b = a * 2u64;
         c = add128(a, b);
         assert_eq!(c, 30u128);
+    }
+
+    #[test]
+    fn muls() {
+        let mut x = 1u32;
+        let mut y = 1u32;
+        let mut r = mul64(x, y);
+        assert_eq!(x as u64, r);
+        let mut a = 2u32;
+        let mut b = 2u32;
+        let mut c = mul64(a, b);
+        assert_eq!(c, 2u32.pow(2u32) as u64);
     }
 
     #[bench]
